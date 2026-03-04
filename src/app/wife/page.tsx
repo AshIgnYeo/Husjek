@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   createPickupRequest,
   getActivePickup,
@@ -13,6 +14,8 @@ import {
 import { getCurrentPosition, reverseGeocode, formatDistance, getDistanceMeters } from "@/lib/geo";
 import { requestNotificationPermission, sendNotification } from "@/lib/notifications";
 import type { PickupRequest, SavedLocation } from "@/lib/supabase";
+
+const LiveMap = dynamic(() => import("@/components/LiveMap"), { ssr: false });
 
 type View = "idle" | "picking-location" | "waiting" | "tracking";
 
@@ -288,8 +291,18 @@ export default function WifePage() {
               )}
             </div>
 
+            {/* Live map */}
+            {["driving", "nearby"].includes(pickup.status) && (
+              <LiveMap
+                pickupLat={pickup.pickup_lat}
+                pickupLng={pickup.pickup_lng}
+                driverLat={pickup.driver_lat}
+                driverLng={pickup.driver_lng}
+              />
+            )}
+
             {/* Distance indicator */}
-            {distance !== null && pickup.status === "driving" && (
+            {distance !== null && ["driving", "nearby"].includes(pickup.status) && (
               <div className="bg-[#16213e] rounded-2xl p-5 text-center">
                 <div className="text-3xl font-bold text-emerald-400">
                   {formatDistance(distance)}
